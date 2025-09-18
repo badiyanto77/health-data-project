@@ -1,18 +1,3 @@
-# # Astro Runtime includes the following pre-installed providers packages: https://www.astronomer.io/docs/astro/runtime-image-architecture#provider-packages
-
-
-# boto3
-# apache-airflow-providers-amazon
-# apache-airflow-providers-postgres==5.10.0
-# psycopg2-binary==2.9.9
-# pandas
-# pyarrow
-# google-api-python-client
-# pydrive2==1.14.0
-# google-auth==2.22.0
-# google-api-python-client==2.100.0
-# oauth2client==4.1.3
-
 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.3/constraints-3.10.txt
 
 boto3
