@@ -1,0 +1,5 @@
+
+# Ignore test data or large files
+data/
+powerbi/
+splitfile/
