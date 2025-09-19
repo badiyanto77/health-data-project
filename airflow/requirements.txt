@@ -1,11 +1,6 @@
---constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.3/constraints-3.10.txt
-
-boto3
 apache-airflow-providers-amazon
-apache-airflow-providers-postgres==5.10.0
-psycopg2-binary==2.9.9
+apache-airflow-providers-postgres==5.13.1
+boto3
+psycopg2-binary
 pandas
 pyarrow
-google-api-python-client==2.100.0
-pydrive2==1.14.0
-google-auth==2.22.0

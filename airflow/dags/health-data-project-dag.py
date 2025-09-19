@@ -2,20 +2,13 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from pydrive2.auth import GoogleAuth
-from pydrive2.drive import GoogleDrive
-from oauth2client.service_account import ServiceAccountCredentials
-from airflow.decorators import task
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.log.logging_mixin import LoggingMixin
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from airflow.utils.trigger_rule import TriggerRule
-from airflow.operators.empty import EmptyOperator
-from boto3.s3.transfer import TransferConfig
 from datetime import datetime
 import boto3
 import os
-from os import path
 import time
 import pandas as pd
 
@@ -275,58 +268,6 @@ def validate_fact_table():
 
 
 
-def gdrive_to_s3(**kwargs):
-    scopes = ['https://www.googleapis.com/auth/drive']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(
-        path.join(path.dirname(__file__), 'credential.json'),
-        scopes
-    )
-
-    gauth = GoogleAuth()
-    gauth.credentials = credentials
-    drive = GoogleDrive(gauth)
-
-    folder_id = "1vjUpextEZWjX2DZEueRshk2GRAAmIQ1G"
-    query = f"'{folder_id}' in parents and trashed=false and mimeType='text/csv'"
-    file_list = drive.ListFile({'q': query}).GetList()
-
-    s3 = S3Hook(aws_conn_id="aws_default", region_name="us-east-2")
-    bucket_name = "health-data-project-bucket"
-
-    for file in file_list:
-        raw_file_name = file['title']
-        file_name = raw_file_name.strip()
-        s3_key = f"data/{file_name}"
-
-        print(f"🔍 Checking S3 for key: {repr(s3_key)}")
-
-        if s3.check_for_key(s3_key, bucket_name=bucket_name):
-            print(f"⏭️ Skipping {file_name}, already exists in S3.")
-            continue
-        else:
-            print(f"📤 Uploading {file_name}, not found in S3.")
-
-        local_path = f"/tmp/{file_name}"
-        file.GetContentFile(local_path)
-
-        if not os.path.exists(local_path):
-            raise FileNotFoundError(f"{local_path} was not downloaded correctly.")
-
-        # upload_large_file_to_s3(local_path, bucket_name, s3_key)
-
-        s3.load_file(filename=local_path, key=s3_key, bucket_name=bucket_name, replace=True)
-        print(f"✅ Uploaded {file_name} → s3://{bucket_name}/{s3_key} using S3Hook")
-
-
-        # Optional: use Airflow-native upload instead of boto3
-        # s3.load_file(filename=local_path, key=s3_key, bucket_name=bucket_name, replace=True)
-
-        os.remove(local_path)
-
-
-
-
-
 with DAG(
     dag_id="health_data_project_dag",
     default_args=default_args,
@@ -337,10 +278,10 @@ with DAG(
 
     start = EmptyOperator(task_id="start")
 
-    gdrive_to_s3_task = PythonOperator(
-    task_id="gdrive_to_s3",
-    python_callable=gdrive_to_s3
-    )
+    # gdrive_to_s3_task = PythonOperator(
+    # task_id="gdrive_to_s3",
+    # python_callable=gdrive_to_s3
+    # )
 
     # ingest_to_redshift_task = PostgresOperator(
     #     task_id="copy_to_redshift",
@@ -417,7 +358,7 @@ validation_gate_02 = EmptyOperator(
 
 
 # DAG structure
-start >> gdrive_to_s3_task >> ingest_to_redshift_task 
+start >>  ingest_to_redshift_task 
 
 # # Run both validations in parallel
 ingest_to_redshift_task >> [validate_providerinfo_task, validate_workdate_task,validate_fact_table_task]
