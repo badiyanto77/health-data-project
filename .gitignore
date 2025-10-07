@@ -3,3 +3,35 @@
 data/
 powerbi/
 splitfile/
+
+# Lambda build artifacts
+lambda/**/*.zip
+lambda/ingest_gdrive_to_s3/lambda_deploy
+lambda/ingest_gdrive_to_s3/credentials.json
+lambda/ingest_gdrive_to_s3/Dockerfile
+lambda/trigger_mwaa/six.py
+
+# Airflow local files
+airflow/.airflow/
+airflow/.astro/
+airflow/dags_backup/
+airflow/logs/
+airflow/include/
+airflow/data/
+airflow/tmp/
+airflow/dist/
+airflow/plugins/
+airflow/packages.txt
+airflow/Dockerfile
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+
+# AWS credentials or local env
+*.pem
+*.key
+.env
+.env.local
+secrets.json
