@@ -1,3 +1,37 @@
+"""
+===============================================================================
+    DAG Name: health_data_project_dag
+    Author: Bagus Adiyanto
+    Created On: 2025-10-07
+    Last Updated: 2025-10-07
+
+    Summary:
+    --------
+    This Airflow DAG orchestrates the ingestion, validation, and transformation 
+    of healthcare staffing data from S3 into Amazon Redshift. The workflow 
+    includes the following key steps:
+
+    1. Ingest new files from S3 into Redshift.
+    2. Run validation checks on provider info, work dates, and fact tables.
+    3. Gate downstream tasks to ensure all validations succeed before proceeding.
+    4. Transform data into Silver layer dimensions:
+         - Provider Dimension
+         - Fact Table
+         - Staffing Type Dimension
+         - Workdate Dimension
+    5. Generate Gold layer metrics:
+         - Provider Staffing Utilization Metric
+    6. End the pipeline after successful transformations.
+
+    Notes:
+    ------
+    - DAG is manually triggered (no schedule interval).
+    - Uses both PythonOperator and PostgresOperator.
+    - Redshift connection ID: "redshift_default".
+    - Validation gates ensure data quality before transformations.
+===============================================================================
+"""
+
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator

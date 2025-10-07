@@ -1,3 +1,34 @@
+"""
+===============================================================================
+    Lambda Name : gdrive_to_s3_csv_sync
+    Author      : Bagus Adiyanto
+    Created On  : 2025-10-07
+    Last Updated: 2025-10-07
+
+    Summary:
+    --------
+    This AWS Lambda function automates the ingestion of CSV files from a 
+    specified Google Drive folder into an Amazon S3 bucket. The workflow 
+    includes the following key steps:
+
+    1. Authenticate with Google Drive using a service account.
+    2. List all CSV files in the configured Google Drive folder.
+    3. For each file:
+         - Check if the file already exists in the target S3 bucket/prefix.
+         - If not present, download the file from Google Drive.
+         - Upload the file into Amazon S3.
+    4. Return a summary of uploaded files.
+
+    Notes:
+    ------
+    - Skips files that already exist in S3 (idempotent uploads).
+    - Requires a valid `credentials.json` service account key packaged 
+      with the Lambda deployment.
+    - IAM role must allow `s3:HeadObject` and `s3:PutObject`.
+    - Only processes files with MIME type `text/csv`.
+===============================================================================
+"""
+
 import boto3
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
