@@ -20,25 +20,50 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
+      # -------------------------------
+      # Lambda: ingest_gdrive_to_s3
+      # -------------------------------
       - name: Package and deploy Lambda - ingest_gdrive_to_s3
         working-directory: lambda/ingest_gdrive_to_s3
         run: |
-          zip -r9 ../../ingest_gdrive_to_s3.zip .
+          # Install dependencies in current folder
+          pip install -r requirements.txt -t .
+
+          # Create ZIP while excluding credentials.json
+          zip -r9 ../../ingest_gdrive_to_s3.zip . -x "credentials.json"
+
+          # Update Lambda function
           aws lambda update-function-code \
             --function-name health_data_project_ingest_to_s3 \
             --zip-file fileb://../../ingest_gdrive_to_s3.zip
 
+      # -------------------------------
+      # Lambda: trigger_mwaa
+      # -------------------------------
       - name: Package and deploy Lambda - trigger_mwaa
         working-directory: lambda/trigger_mwaa
         run: |
-          zip -r9 ../../trigger_mwaa.zip .
+          # Install dependencies in current folder
+          pip install -r requirements.txt -t .
+
+          # Create ZIP while excluding credentials.json (if any)
+          zip -r9 ../../trigger_mwaa.zip . -x "credentials.json"
+
+          # Update Lambda function
           aws lambda update-function-code \
             --function-name health_data_project_sns_to_trigger_mwaa \
             --zip-file fileb://../../trigger_mwaa.zip
 
+      # -------------------------------
+      # Sync Airflow DAGs to MWAA S3 bucket
+      # -------------------------------
       - name: Sync Airflow DAGs to MWAA S3 bucket
         run: |
-          aws s3 sync airflow/dags s3://health-data-project-bucket/dags --delete
+          aws s3 sync airflow/dags s3://health-data-project-bucket/dags --delete \
+              --exclude ".airflowignore" \
+              --exclude ".*" \
+              --exclude "__pycache__/*" \
+              --exclude "*.pyc"
 
       - name: Post-deployment confirmation
         run: echo "✅ Deployment complete for Lambdas and Airflow DAGs"
