@@ -30,21 +30,38 @@
 """
 
 import boto3
+import json
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from botocore.exceptions import ClientError
 
 # Config
-FOLDER_ID = '1vjUpextEZWjX2DZEueRshk2GRAAmIQ1G'  # your new Google Drive folder ID
+FOLDER_ID = '1vjUpextEZWjX2DZEueRshk2GRAAmIQ1G'  # your Google Drive folder ID
 S3_BUCKET = 'health-data-project-bucket'
 S3_PREFIX = 'data/'  # target folder in S3
 
-def lambda_handler(event, context):
-    # Authenticate with Google
-    creds = service_account.Credentials.from_service_account_file(
-        'credentials.json',
+def get_gdrive_credentials():
+    """
+    Load Google Drive credentials from AWS Secrets Manager.
+    The secret should contain the full JSON content of credentials.json.
+    """
+    secret_name = 'gdrive_credential_json'  # your secret name
+    region_name = boto3.session.Session().region_name
+
+    client = boto3.client('secretsmanager', region_name=region_name)
+    response = client.get_secret_value(SecretId=secret_name)
+    secret_dict = json.loads(response['SecretString'])
+
+    # Create credentials from the JSON secret
+    creds = service_account.Credentials.from_service_account_info(
+        secret_dict,
         scopes=['https://www.googleapis.com/auth/drive']
     )
+    return creds
+
+def lambda_handler(event, context):
+    # ✅ Authenticate with Google using credentials from Secrets Manager
+    creds = get_gdrive_credentials()
     service = build('drive', 'v3', credentials=creds)
 
     # List CSV files in the Google Drive folder
