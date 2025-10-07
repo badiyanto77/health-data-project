@@ -25,7 +25,7 @@ jobs:
         run: |
           zip -r9 ../../ingest_gdrive_to_s3.zip .
           aws lambda update-function-code \
-            --function-name ingest_gdrive_to_s3 \
+            --function-name health_data_project_ingest_to_s3 \
             --zip-file fileb://../../ingest_gdrive_to_s3.zip
 
       - name: Package and deploy Lambda - trigger_mwaa
@@ -33,7 +33,7 @@ jobs:
         run: |
           zip -r9 ../../trigger_mwaa.zip .
           aws lambda update-function-code \
-            --function-name trigger_mwaa \
+            --function-name health_data_project_sns_to_trigger_mwaa \
             --zip-file fileb://../../trigger_mwaa.zip
 
       - name: Sync Airflow DAGs to MWAA S3 bucket
